@@ -1,7 +1,10 @@
 package com.example.jeffhsu.gridimagesearch.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -155,7 +158,7 @@ public class SearchActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.barSetting) {
-            Toast.makeText(this, "Clicked!", Toast.LENGTH_LONG).show();
+//            Toast.makeText(this, "Clicked!", Toast.LENGTH_LONG).show();
             Intent i = new Intent(this, ImageSearchSetting.class);
             startActivity(i);
         }
@@ -163,10 +166,23 @@ public class SearchActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
     // Fire whenever the button is pressed (android:onClick)
     public void onImageSearch(View view) {
+
+        if(!isNetworkAvailable()){
+            Toast.makeText(this,"You don\'t have network connection", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         String query = etQuery.getText().toString();
-        Toast.makeText(this,query, Toast.LENGTH_LONG).show();
+//        Toast.makeText(this,query, Toast.LENGTH_LONG).show();
         String searchUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query + "&rsz=8";
         String advOptions = "";
 
@@ -211,4 +227,5 @@ public class SearchActivity extends ActionBarActivity {
             }
         });
     }
+
 }
