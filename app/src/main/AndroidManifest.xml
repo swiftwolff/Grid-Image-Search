@@ -26,6 +26,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.jeffhsu.gridimagesearch.activities.SearchActivity" />
         </activity>
+        <activity
+            android:name=".activities.ImageSearchSetting"
+            android:label="@string/title_activity_image_search_setting" >
+        </activity>
     </application>
 
 </manifest>
