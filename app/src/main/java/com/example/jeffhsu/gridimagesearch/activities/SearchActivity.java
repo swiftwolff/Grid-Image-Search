@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.example.jeffhsu.gridimagesearch.Listeners.EndlessScrollListener;
 import com.example.jeffhsu.gridimagesearch.adapters.ImageResultsAdapter;
 import com.example.jeffhsu.gridimagesearch.models.ImageResult;
 import com.example.jeffhsu.gridimagesearch.R;
@@ -40,7 +41,19 @@ public class SearchActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+        // setting up the views first
         setupViews();
+        // Attach the listener to the AdapterView onCreate
+        gvResults.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public void onLoadMore(int page, int totalItemCount) {
+                Log.i("DEBUG","page in onLoadMore "+page);
+                Log.i("DEBUG", "totalItemCount in onLoadMore "+totalItemCount);
+            // Triggers only when new data needs to be appended to the list
+            // Add whatever code is needed to append new items to your AdapterView
+                customLoadMoreDataFromApi(page);
+            }
+        });
         imageResults = new ArrayList<ImageResult>();
         // Attaches the data source to an adapter
         aImageResults = new ImageResultsAdapter(this, imageResults);
@@ -49,6 +62,60 @@ public class SearchActivity extends ActionBarActivity {
         colors = getResources().getStringArray(R.array.color);
         types = getResources().getStringArray(R.array.type);
 
+    }
+
+    private void customLoadMoreDataFromApi(int page) {
+                Log.i("DEBUG","FIRING API CALL!");
+                Log.i("DEBUG","page in api firing call is "+ page);
+//        Log.i("DEBUG","Calling onLoad more!");
+        String query = etQuery.getText().toString();
+//        Toast.makeText(this,query, Toast.LENGTH_LONG).show();
+        String searchUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query + "&rsz=8";
+        String advOptions = "";
+        String startIndex = Integer.toString((page-1)*8);
+
+        SharedPreferences prefs = getSharedPreferences("MyPref",0);
+        int size = prefs.getInt("size",0);
+        int color = prefs.getInt("color", 0);
+        int type = prefs.getInt("type", 0);
+        String site = prefs.getString("site", null);
+
+        if (size!=0) {
+            advOptions += "&imgsz=" + sizes[size];
+        }
+        if (color!=0) {
+            advOptions += "&imgcolor=" + colors[color];
+        }
+        if (type!=0) {
+            advOptions += "&imgtype=" + types[type];
+        }
+        if (site!=null && !site.equals("")) {
+            advOptions += "&as_sitesearch" + site;
+        }
+
+        searchUrl += advOptions;
+        searchUrl += "&start=" + startIndex;
+
+        Log.i("DEBUG", "search url is "+searchUrl);
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.get(searchUrl, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray imageResultsJson = null;
+                try{
+                    imageResultsJson = response.getJSONObject("responseData").getJSONArray("results");
+//                    imageResults.clear();
+                    // When you make changes to adapter, it does modify the underlying data
+                    aImageResults.addAll(ImageResult.fromJSONArray(imageResultsJson));
+                    // do notify or another method
+//                    aImageResults.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.i("INFO", imageResults.toString());
+            }
+        });
     }
 
     private void setupViews(){
