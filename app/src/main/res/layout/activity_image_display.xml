@@ -17,4 +17,5 @@
         android:maxWidth="600dp"
         android:scaleType="center"
         android:adjustViewBounds="true"/>
+
 </RelativeLayout>
